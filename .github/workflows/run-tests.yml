@@ -1,4 +1,4 @@
-name: Run Playwright Tests 🎭
+name: e2e (Playwright) and unit test (custom)
 
 on:
   push:
@@ -15,6 +15,7 @@ jobs:
       - name: Start containers 🐳 # Step 2
         run: |
           export DISABLE_LOGGING=true
+          export SPRINT_FOLDER=sprint5-with-bugs
           docker compose -f docker-compose.yml up -d
       - name: Sleep for 60 seconds # Step 3
         run: sleep 60s
@@ -29,15 +30,37 @@ jobs:
           curl -v -X POST 'http://localhost:8091/users/login' \
           -H 'Content-Type: application/json' \
           --data-raw '{"email":"customer@practicesoftwaretesting.com","password":"welcome01"}'
+
+      # Laravel API Tests
+      - name: Setup PHP for API tests 🐘
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+      - name: Install API Dependencies 📦
+        run: |
+          cd sprint5-with-bugs/API
+          composer install --no-progress --prefer-dist
+      - name: Run Laravel Unit Tests 🧪
+        run: |
+          cd sprint5-with-bugs/API
+          ./vendor/bin/pest --testdox
+
+      # Angular UI Tests
       - name: Install node ⚙️ # Step 7
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies ⚙️ # Step 8
+      - name: Install UI Dependencies 📦
         run: |
+          cd sprint5-with-bugs/UI
           npm ci
           PLAYWRIGHT_VERSION=$(npm ls --json @playwright/test | jq --raw-output '.dependencies["@playwright/test"].version')
           echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
+      - name: Run Angular Unit Tests 🧪
+        run: |
+          cd sprint5-with-bugs/UI
+          npm run test -- --watch=false --browsers=ChromeHeadless
+
       # Cache browser binaries, cache key is based on Playwright version and OS
       - name: 🧰 Cache Playwright browser binaries # Step 9
         uses: actions/cache@v3
@@ -59,11 +82,13 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: |
           npx playwright install-deps
-      - name: Run Playwright tests 🧪 # Step 12
-        run: npx playwright test
+      - name: Run Playwright E2E tests 🧪 # Step 12
+        run: |
+          cd sprint5-with-bugs/UI
+          npx playwright test
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report 📊
-          path: playwright-report/
+          path: sprint5-with-bugs/UI/playwright-report/
           retention-days: 10
