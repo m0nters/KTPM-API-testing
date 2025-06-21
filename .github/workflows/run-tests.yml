@@ -12,6 +12,49 @@ jobs:
     steps:
       - name: Checkout ⚙️ # Step 1
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers 🐳
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('_docker/**') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and cache Docker images 🏗️
+        run: |
+          # Build images with cache
+          docker buildx build \
+            --file _docker/app.docker \
+            --tag practice-software-testing_laravel-api \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            _docker
+
+          docker buildx build \
+            --file _docker/ui.docker \
+            --tag practice-software-testing_angular-ui \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            _docker
+
+          docker buildx build \
+            --file _docker/web.docker \
+            --tag practice-software-testing_web \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            _docker
+
+          # Move cache
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
       - name: Start containers 🐳 # Step 2
         run: |
           export DISABLE_LOGGING=true
