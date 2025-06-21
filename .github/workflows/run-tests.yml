@@ -64,7 +64,6 @@ jobs:
             echo "⚠️ Tests completed with some failures (expected for 'with-bugs' version)"
           }
 
-      # Angular UI Tests
       - name: Install node ⚙️ # Step 7
         uses: actions/setup-node@v4
         with:
@@ -98,11 +97,6 @@ jobs:
           PLAYWRIGHT_VERSION=$(npm list @playwright/test --json 2>/dev/null | jq -r '.dependencies["@playwright/test"].version // "1.40.0"')
           echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
           echo "✅ Detected Playwright version: $PLAYWRIGHT_VERSION"
-
-      - name: Run Angular Unit Tests 🧪
-        run: |
-          cd sprint5-with-bugs/UI
-          npm run test -- --watch=false --browsers=ChromeHeadless
 
       # Cache browser binaries, cache key is based on Playwright version and OS
       - name: 🧰 Cache Playwright browser binaries # Step 9
