@@ -2,7 +2,7 @@ name: Run Playwright Tests 🎭
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 concurrency: production_environment
 
@@ -10,36 +10,36 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout ⚙️
+      - name: Checkout ⚙️ # Step 1
         uses: actions/checkout@v4
-      - name: Start containers 🐳
+      - name: Start containers 🐳 # Step 2
         run: |
           export DISABLE_LOGGING=true
           docker compose -f docker-compose.yml up -d
-      - name: Sleep for 60 seconds
+      - name: Sleep for 60 seconds # Step 3
         run: sleep 60s
         shell: bash
-      - name: Create & Seed database 🌱
+      - name: Create & Seed database 🌱 # Step 4
         run: |
           docker compose exec -T laravel-api php artisan migrate:refresh --seed
-      - name: GET Version
+      - name: GET Version # Step 5
         run: curl -v -X GET 'http://localhost:8091/status'
-      - name: POST login
+      - name: POST login # Step 6
         run: |
           curl -v -X POST 'http://localhost:8091/users/login' \
           -H 'Content-Type: application/json' \
           --data-raw '{"email":"customer@practicesoftwaretesting.com","password":"welcome01"}'
-      - name: Install node ⚙️
+      - name: Install node ⚙️ # Step 7
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies ⚙️
+      - name: Install dependencies ⚙️ # Step 8
         run: |
           npm ci
           PLAYWRIGHT_VERSION=$(npm ls --json @playwright/test | jq --raw-output '.dependencies["@playwright/test"].version')
           echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
       # Cache browser binaries, cache key is based on Playwright version and OS
-      - name: 🧰 Cache Playwright browser binaries
+      - name: 🧰 Cache Playwright browser binaries # Step 9
         uses: actions/cache@v3
         id: playwright-cache
         with:
@@ -49,17 +49,17 @@ jobs:
             ${{ runner.os }}-playwright-
 
       # Install browser binaries & OS dependencies if cache missed
-      - name: 🏗 Install Playwright browser binaries & OS dependencies
+      - name: 🏗 Install Playwright browser binaries & OS dependencies # Step 10
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: |
           npx playwright install --with-deps
 
       # Install only the OS dependencies if cache hit
-      - name: 🏗 Install Playwright OS dependencies
+      - name: 🏗 Install Playwright OS dependencies # Step 11
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: |
           npx playwright install-deps
-      - name: Run Playwright tests 🧪
+      - name: Run Playwright tests 🧪 # Step 12
         run: npx playwright test
       - uses: actions/upload-artifact@v4
         if: always()
