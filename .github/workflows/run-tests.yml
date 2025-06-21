@@ -39,7 +39,8 @@ jobs:
       - name: Install API Dependencies 📦
         run: |
           cd sprint5-with-bugs/API
-          composer install --no-progress --prefer-dist
+          sudo chown -R $USER:$USER .
+          composer install --no-progress --prefer-dist --no-interaction
       - name: Run Laravel Unit Tests 🧪
         run: |
           cd sprint5-with-bugs/API
