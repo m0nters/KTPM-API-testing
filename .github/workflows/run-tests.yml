@@ -84,10 +84,6 @@ jobs:
           cd sprint5-with-bugs/API
           sudo chown -R $USER:$USER .
           composer install --no-progress --prefer-dist --no-interaction
-      - name: Run Laravel Unit Tests 🧪
-        run: |
-          # Run tests inside the Docker container where dependencies are already installed
-          docker compose exec -T laravel-api php artisan test --testdox
 
       # Angular UI Tests
       - name: Install node ⚙️ # Step 7

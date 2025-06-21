@@ -63,9 +63,3 @@ jobs:
         with:
           input: sprint${{ matrix.sprint }}/API/.env_template
           output: sprint${{ matrix.sprint }}/API/.env
-      - name: Deploy
-        uses: deployphp/action@v1.0.23
-        with:
-          private-key: ${{ secrets.PRIVATE_KEY }}
-          dep: deploy:sprint${{ matrix.sprint }} production
-          deployer-version: "7.4.0"
