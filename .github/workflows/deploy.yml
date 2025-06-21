@@ -2,7 +2,7 @@ name: deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 concurrency: production_environment
 
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        sprint: [1, 2, 3, 4, 5, '5-with-bugs']
+        sprint: ["5-with-bugs"]
     env:
       NODE_VERSION: ${{ matrix.sprint == '5' && '22.2.0' || '16' }}
       SECRET_GOOGLE_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_ID || '' }}
@@ -23,15 +23,15 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: "8.3"
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-#      - name: Install Deployer globally
-#        run: |
-#          composer global require deployer/deployer:6.9.0
-#          echo "${{ runner.tool_cache }}/composer/vendor/bin" >> $GITHUB_PATH
+      #      - name: Install Deployer globally
+      #        run: |
+      #          composer global require deployer/deployer:6.9.0
+      #          echo "${{ runner.tool_cache }}/composer/vendor/bin" >> $GITHUB_PATH
 
       - name: Install (dev) Dependencies
         run: |
@@ -68,4 +68,4 @@ jobs:
         with:
           private-key: ${{ secrets.PRIVATE_KEY }}
           dep: deploy:sprint${{ matrix.sprint }} production
-          deployer-version: '7.4.0'
+          deployer-version: "7.4.0"
