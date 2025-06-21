@@ -55,11 +55,20 @@ jobs:
           echo 'SESSION_DRIVER=array' >> .env.testing
           echo 'QUEUE_CONNECTION=sync' >> .env.testing
 
-          # Run the unit tests
-          ./vendor/bin/pest --testdox --env=testing
+          # Clear config cache
+          php artisan config:clear
 
-          # Alternative if pest fails, use phpunit
-          # ./vendor/bin/phpunit --testdox --configuration phpunit.xml
+          # Try multiple test runners with fallbacks
+          if [ -f "./vendor/bin/pest" ]; then
+            echo "✅ Running tests with Pest..."
+            ./vendor/bin/pest --testdox --env=testing
+          elif [ -f "./vendor/bin/phpunit" ]; then
+            echo "✅ Running tests with PHPUnit..."
+            ./vendor/bin/phpunit --testdox --env=testing
+          else
+            echo "✅ Running tests with Laravel artisan..."
+            php artisan test --env=testing --testdox
+          fi
 
       # Angular UI Tests
       - name: Install node ⚙️ # Step 7
