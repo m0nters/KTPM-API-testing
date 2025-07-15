@@ -75,7 +75,7 @@ jobs:
 
             # Production Deployment
             - name: Deploy to Production VPS 🚀
-              if: github.event.workflow_run.head_branch == 'main'
+              if: ${{github.event.workflow_run.head_branch == 'main'}}
               run: |
                   echo "🏭 PRODUCTION DEPLOYMENT"
                   echo "=========================================="
@@ -95,7 +95,7 @@ jobs:
 
             # QA Deployment
             - name: Deploy to QA VPS 🧪
-              if: github.event.workflow_run.head_branch == 'develop'
+              if: ${{github.event.workflow_run.head_branch == 'develop'}}
               run: |
                   echo "🧪 QA DEPLOYMENT"
                   echo "=========================================="
@@ -115,7 +115,7 @@ jobs:
 
             # Developer/Feature Deployment
             - name: Deploy to Dev VPS 👨‍💻
-              if: startsWith(github.event.workflow_run.head_branch, 'feature/')
+              if: $${{startsWith(github.event.workflow_run.head_branch, 'feature/')}}
               run: |
                   echo "👨‍💻 DEV DEPLOYMENT"
                   echo "=========================================="
@@ -135,7 +135,7 @@ jobs:
 
             # Environment-specific post-deployment tasks
             - name: Production Post-Deployment Tasks 🏭
-              if: github.event.workflow_run.head_branch == 'main'
+              if: ${{github.event.workflow_run.head_branch == 'main'}}
               run: |
                   echo "🔧 Running production post-deployment tasks..."
                   echo "✅ SSL certificates verified"
@@ -145,7 +145,7 @@ jobs:
                   echo "📧 Production deployment notification sent"
 
             - name: QA Post-Deployment Tasks 🧪
-              if: github.event.workflow_run.head_branch == 'develop'
+              if: ${{github.event.workflow_run.head_branch == 'develop'}}
               run: |
                   echo "🔧 Running QA post-deployment tasks..."
                   echo "✅ Test data populated"
@@ -155,7 +155,7 @@ jobs:
                   echo "📧 QA deployment notification sent"
 
             - name: Dev Post-Deployment Tasks 👨‍💻
-              if: startsWith(github.event.workflow_run.head_branch, 'feature/')
+              if: ${{startsWith(github.event.workflow_run.head_branch, 'feature/')}}
               run: |
                   echo "🔧 Running Dev post-deployment tasks..."
                   echo "✅ Dev test data populated"
