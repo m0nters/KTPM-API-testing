@@ -29,7 +29,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
               with:
-              ref: ${{ github.event.workflow_run.head_branch }}
+                  ref: ${{ github.event.workflow_run.head_branch }}
+
+            - name: Checkout branch được trigger 🧬
+              uses: actions/checkout@v4
+              with:
+                  repository: ${{ github.event.workflow_run.repository.full_name }}
+                  ref: ${{ github.event.workflow_run.head_branch }}
 
             - name: Detect Environment 🎯
               run: |
