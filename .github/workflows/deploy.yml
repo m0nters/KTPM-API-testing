@@ -5,7 +5,6 @@ on:
         workflows: ["unit test"]
         types:
             - completed
-        branches: [main, feature/*, develop]
     # # Keep manual triggers for testing
     workflow_dispatch:
 
@@ -117,7 +116,7 @@ jobs:
 
             # Developer/Feature Deployment
             - name: Deploy to Dev VPS 👨‍💻
-              if: $${{startsWith(github.event.workflow_run.head_branch, 'feature/')}}
+              if: ${{startsWith(github.event.workflow_run.head_branch, 'feature/')}}
               run: |
                   echo "👨‍💻 DEV DEPLOYMENT"
                   echo "=========================================="
