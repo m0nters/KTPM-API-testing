@@ -39,6 +39,9 @@ jobs:
               uses: shivammathur/setup-php@v2
               with:
                   php-version: "8.3"
+                  tools: none
+                  update: false
+
             - name: Install API Dependencies 📦
               run: |
                   cd sprint5-with-bugs/API
