@@ -23,9 +23,9 @@ jobs:
             SECRET_GOOGLE_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_SECRET || '' }}
             SECRET_GITHUB_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_ID || '' }}
             SECRET_GITHUB_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_SECRET || '' }}
-            TRIGGERING_BRANCH: ${{ github.event.workflow_run.head_branch }}
-            ENVIRONMENT: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || (github.event.workflow_run.head_branch == 'develop' && 'qa' || 'dev') }}
-            VPS_HOST: ${{ github.event.workflow_run.head_branch == 'main' && 'prod-vps.example.com' || (github.event.workflow_run.head_branch == 'develop' && 'qa-vps.example.com' || 'dev-vps.example.com') }}
+            TRIGGERING_BRANCH: ${{ github.event.workflow_run.head_sha }}
+            ENVIRONMENT: ${{ github.event.workflow_run.head_sha == 'main' && 'production' || (github.event.workflow_run.head_sha == 'develop' && 'qa' || 'dev') }}
+            VPS_HOST: ${{ github.event.workflow_run.head_sha == 'main' && 'prod-vps.example.com' || (github.event.workflow_run.head_sha == 'develop' && 'qa-vps.example.com' || 'dev-vps.example.com') }}
         steps:
             - uses: actions/checkout@v4
               with:
