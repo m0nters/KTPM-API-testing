@@ -135,7 +135,7 @@ jobs:
 
             # Environment-specific post-deployment tasks
             - name: Production Post-Deployment Tasks 🏭
-              if: github.ref == 'refs/heads/main'
+              if: github.event.workflow_run.head_branch == 'main'
               run: |
                   echo "🔧 Running production post-deployment tasks..."
                   echo "✅ SSL certificates verified"
@@ -145,7 +145,7 @@ jobs:
                   echo "📧 Production deployment notification sent"
 
             - name: QA Post-Deployment Tasks 🧪
-              if: github.ref == 'refs/heads/develop'
+              if: github.event.workflow_run.head_branch == 'develop'
               run: |
                   echo "🔧 Running QA post-deployment tasks..."
                   echo "✅ Test data populated"
@@ -155,7 +155,7 @@ jobs:
                   echo "📧 QA deployment notification sent"
 
             - name: Dev Post-Deployment Tasks 👨‍💻
-              if: startsWith(github.ref, 'refs/heads/feature/')
+              if: startsWith(github.event.workflow_run.head_branch, 'feature/')
               run: |
                   echo "🔧 Running Dev post-deployment tasks..."
                   echo "✅ Dev test data populated"
@@ -170,10 +170,10 @@ jobs:
                   echo "=========================================="
                   echo "🌍 Environment: ${{ env.ENVIRONMENT }}"
                   echo "🖥️ Target Server: ${{ env.VPS_HOST }}"
-                  echo "🌿 Branch: ${{ github.ref_name }}"
+                  echo "🌿 Branch: ${{ github.event.workflow_run.head_branch }}"
                   echo "⏰ Deployment Time: $(date)"
                   echo "👤 Triggered by: ${{ github.actor }}"
-                  echo "🔗 Commit: ${{ github.sha }}"
+                  echo "🔗 Commit: ${{ github.event.workflow_run.head_sha }}"
                   echo "✅ Deployment Status: SUCCESS"
                   echo "=========================================="
 
