@@ -29,7 +29,8 @@ jobs:
         steps:
             - uses: actions/checkout@v4
               with:
-                  ref: ${{ github.event.workflow_run.head_branch }}
+                  repository: ${{ github.event.workflow_run.repository.full_name }}
+                  ref: ${{ github.event.workflow_run.head_sha }}
 
             - name: Checkout branch được trigger 🧬
               uses: actions/checkout@v4
