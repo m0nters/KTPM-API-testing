@@ -131,3 +131,8 @@ jobs:
                   name: playwright-report 📊
                   path: sprint5-with-bugs/UI/playwright-report/
                   retention-days: 10
+            # Add this final step to ensure workflow completes properly
+            - name: Workflow Completion 🎉
+              run: |
+                  echo "✅ Unit tests workflow completed successfully!"
+                  echo "🚀 Ready to trigger deployment workflow"

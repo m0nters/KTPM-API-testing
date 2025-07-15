@@ -6,8 +6,8 @@ on:
         types:
             - completed
         branches: [main, feature/*, develop]
-    # # Keep manual triggers for testing
-    # workflow_dispatch:
+    # Enable manual triggers for testing
+    workflow_dispatch:
 
 concurrency: production_environment
 
@@ -24,9 +24,10 @@ jobs:
             SECRET_GOOGLE_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_SECRET || '' }}
             SECRET_GITHUB_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_ID || '' }}
             SECRET_GITHUB_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_SECRET || '' }}
-            # Environment detection
-            ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || (github.ref == 'refs/heads/develop' && 'qa' || 'staging') }}
-            VPS_HOST: ${{ github.ref == 'refs/heads/main' && 'prod-vps.example.com' || 'qa-vps.example.com' }}
+            # Environment detection - Use workflow_run context for correct branch info
+            TRIGGERING_BRANCH: ${{ github.event.workflow_run.head_branch }}
+            ENVIRONMENT: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || (github.event.workflow_run.head_branch == 'develop' && 'qa' || 'staging') }}
+            VPS_HOST: ${{ github.event.workflow_run.head_branch == 'main' && 'prod-vps.example.com' || 'qa-vps.example.com' }}
         steps:
             - uses: actions/checkout@v4
 
@@ -34,48 +35,15 @@ jobs:
               run: |
                   echo "🌍 Environment: ${{ env.ENVIRONMENT }}"
                   echo "🖥️ Target VPS: ${{ env.VPS_HOST }}"
-                  echo "🌿 Branch: ${{ github.ref_name }}"
+                  echo "🌿 Triggering Branch: ${{ env.TRIGGERING_BRANCH }}"
+                  echo "🔗 Triggering Workflow: ${{ github.event.workflow_run.name }}"
+                  echo "📋 Triggering Run ID: ${{ github.event.workflow_run.id }}"
 
-            - name: Setup PHP
-              uses: shivammathur/setup-php@v2
-              with:
-                  php-version: "8.3"
+            # ...existing setup steps...
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-
-            - name: Install (dev) Dependencies
-              run: |
-                  cd sprint${{ matrix.sprint }}/API
-                  composer update --no-progress --prefer-dist
-
-            - name: Install Dependencies
-              run: |
-                  cd sprint${{ matrix.sprint }}/API
-                  composer update --no-dev --prefer-dist --optimize-autoloader
-                  composer dump-autoload -o
-
-            - name: Make envfile
-              uses: danielr1996/envsubst-action@1.0.0
-              env:
-                  SECRET_DB: ${{ secrets.SECRET_DB }}
-                  SECRET_DB_USER: ${{ secrets.SECRET_DB_USER }}
-                  SECRET_DB_PASS: ${{ secrets.SECRET_DB_PASS }}
-                  SECRET_GOOGLE_ID: ${{ env.SECRET_GOOGLE_ID }}
-                  SECRET_GOOGLE_SECRET: ${{ env.SECRET_GOOGLE_SECRET }}
-                  SECRET_GITHUB_ID: ${{ env.SECRET_GITHUB_ID }}
-                  SECRET_GITHUB_SECRET: ${{ env.SECRET_GITHUB_SECRET }}
-              with:
-                  input: sprint${{ matrix.sprint }}/API/.env_template
-                  output: sprint${{ matrix.sprint }}/API/.env
-
-            # ...existing code...
-
-            # Production Deployment
+            # Production Deployment - Fix condition to use workflow_run context
             - name: Deploy to Production VPS 🚀
-              if: github.ref == 'refs/heads/main'
+              if: github.event.workflow_run.head_branch == 'main'
               run: |
                   echo "🏭 PRODUCTION DEPLOYMENT"
                   echo "=========================================="
@@ -93,9 +61,9 @@ jobs:
                   echo "✅ Production services restarted"
                   echo "🎉 PRODUCTION DEPLOYMENT COMPLETED!"
 
-            # QA Deployment
+            # QA Deployment - Fix condition
             - name: Deploy to QA VPS 🧪
-              if: github.ref == 'refs/heads/develop'
+              if: github.event.workflow_run.head_branch == 'develop'
               run: |
                   echo "🧪 QA DEPLOYMENT"
                   echo "=========================================="
@@ -113,29 +81,29 @@ jobs:
                   echo "✅ QA services restarted"
                   echo "🎉 QA DEPLOYMENT COMPLETED!"
 
-            # Developer/Feature Deployment
+            # Developer/Feature Deployment - Fix condition
             - name: Deploy to Dev VPS 👨‍💻
-              if: startsWith(github.ref, 'refs/heads/feature/')
+              if: startsWith(github.event.workflow_run.head_branch, 'feature/')
               run: |
                   echo "👨‍💻 DEV DEPLOYMENT"
                   echo "=========================================="
                   echo "🖥️ Connecting to Dev VPS: dev-vps.example.com"
                   echo "🔐 Using Dev SSH key"
-                  echo "🌿 Deploying from ${{ github.ref_name }} branch"
+                  echo "🌿 Deploying from ${{ github.event.workflow_run.head_branch }} branch"
                   echo "⚙️ Environment: dev"
                   echo "🗄️ Database: dev_db"
                   echo "👨‍💻 Starting Dev deployment..."
                   sleep 1
-                  echo "✅ Code pulled from ${{ github.ref_name }} branch"
+                  echo "✅ Code pulled from ${{ github.event.workflow_run.head_branch }} branch"
                   echo "✅ Dependencies installed"
                   echo "✅ Dev database seeded"
                   echo "✅ Debug mode enabled"
                   echo "✅ Dev services restarted"
                   echo "🎉 DEV DEPLOYMENT COMPLETED!"
 
-            # Environment-specific post-deployment tasks
+            # Environment-specific post-deployment tasks - Fix conditions
             - name: Production Post-Deployment Tasks 🏭
-              if: github.ref == 'refs/heads/main'
+              if: github.event.workflow_run.head_branch == 'main'
               run: |
                   echo "🔧 Running production post-deployment tasks..."
                   echo "✅ SSL certificates verified"
@@ -145,7 +113,7 @@ jobs:
                   echo "📧 Production deployment notification sent"
 
             - name: QA Post-Deployment Tasks 🧪
-              if: github.ref == 'refs/heads/develop'
+              if: github.event.workflow_run.head_branch == 'develop'
               run: |
                   echo "🔧 Running QA post-deployment tasks..."
                   echo "✅ Test data populated"
@@ -155,7 +123,7 @@ jobs:
                   echo "📧 QA deployment notification sent"
 
             - name: Dev Post-Deployment Tasks 👨‍💻
-              if: startsWith(github.ref, 'refs/heads/feature/')
+              if: startsWith(github.event.workflow_run.head_branch, 'feature/')
               run: |
                   echo "🔧 Running Dev post-deployment tasks..."
                   echo "✅ Dev test data populated"
@@ -170,10 +138,10 @@ jobs:
                   echo "=========================================="
                   echo "🌍 Environment: ${{ env.ENVIRONMENT }}"
                   echo "🖥️ Target Server: ${{ env.VPS_HOST }}"
-                  echo "🌿 Branch: ${{ github.ref_name }}"
+                  echo "🌿 Branch: ${{ env.TRIGGERING_BRANCH }}"
                   echo "⏰ Deployment Time: $(date)"
                   echo "👤 Triggered by: ${{ github.actor }}"
-                  echo "🔗 Commit: ${{ github.sha }}"
+                  echo "🔗 Triggering Commit: ${{ github.event.workflow_run.head_sha }}"
                   echo "✅ Deployment Status: SUCCESS"
                   echo "=========================================="
 
