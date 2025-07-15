@@ -24,10 +24,9 @@ jobs:
             SECRET_GOOGLE_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_SECRET || '' }}
             SECRET_GITHUB_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_ID || '' }}
             SECRET_GITHUB_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_SECRET || '' }}
-            # Environment detection - Use workflow_run context for correct branch info
             TRIGGERING_BRANCH: ${{ github.event.workflow_run.head_branch }}
-            ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || (github.ref == 'refs/heads/develop' && 'qa' || 'staging') }}
-            VPS_HOST: ${{ github.ref == 'refs/heads/main' && 'prod-vps.example.com' || 'qa-vps.example.com' }}
+            ENVIRONMENT: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || (github.event.workflow_run.head_branch == 'develop' && 'qa' || 'dev') }}
+            VPS_HOST: ${{ github.event.workflow_run.head_branch == 'main' && 'prod-vps.example.com' || (github.event.workflow_run.head_branch == 'develop' && 'qa-vps.example.com' || 'dev-vps.example.com') }}
         steps:
             - uses: actions/checkout@v4
 
@@ -35,7 +34,7 @@ jobs:
               run: |
                   echo "🌍 Environment: ${{ env.ENVIRONMENT }}"
                   echo "🖥️ Target VPS: ${{ env.VPS_HOST }}"
-                  echo "🌿 Branch: ${{ github.ref_name }}"
+                  echo "🌿 Branch: ${{ env.TRIGGERING_BRANCH }}"
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -76,7 +75,7 @@ jobs:
 
             # Production Deployment
             - name: Deploy to Production VPS 🚀
-              if: github.ref == 'refs/heads/main'
+              if: github.event.workflow_run.head_branch == 'main'
               run: |
                   echo "🏭 PRODUCTION DEPLOYMENT"
                   echo "=========================================="
@@ -96,7 +95,7 @@ jobs:
 
             # QA Deployment
             - name: Deploy to QA VPS 🧪
-              if: github.ref == 'refs/heads/develop'
+              if: github.event.workflow_run.head_branch == 'develop'
               run: |
                   echo "🧪 QA DEPLOYMENT"
                   echo "=========================================="
@@ -116,7 +115,7 @@ jobs:
 
             # Developer/Feature Deployment
             - name: Deploy to Dev VPS 👨‍💻
-              if: startsWith(github.ref, 'refs/heads/feature/')
+              if: startsWith(github.event.workflow_run.head_branch, 'feature/')
               run: |
                   echo "👨‍💻 DEV DEPLOYMENT"
                   echo "=========================================="
