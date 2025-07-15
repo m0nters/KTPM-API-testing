@@ -29,6 +29,8 @@ jobs:
             VPS_HOST: ${{ github.event.workflow_run.head_branch == 'main' && 'prod-vps.example.com' || (github.event.workflow_run.head_branch == 'develop' && 'qa-vps.example.com' || 'dev-vps.example.com') }}
         steps:
             - uses: actions/checkout@v4
+              with:
+              ref: ${{ github.event.workflow_run.head_branch }}
 
             - name: Detect Environment 🎯
               run: |
