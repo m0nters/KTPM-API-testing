@@ -1,57 +1,85 @@
 name: deploy
 
 on:
-  push:
-    branches: [main]
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [develop, main]
 
-concurrency: production_environment
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        sprint: ["5-with-bugs"]
-    env:
-      NODE_VERSION: ${{ matrix.sprint == '5' && '22.2.0' || '16' }}
-      SECRET_GOOGLE_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_ID || '' }}
-      SECRET_GOOGLE_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_SECRET || '' }}
-      SECRET_GITHUB_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_ID || '' }}
-      SECRET_GITHUB_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_SECRET || '' }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.3"
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      #      - name: Install Deployer globally
-      #        run: |
-      #          composer global require deployer/deployer:6.9.0
-      #          echo "${{ runner.tool_cache }}/composer/vendor/bin" >> $GITHUB_PATH
+    deploy:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                include:
+                    - branch: develop
+                      environment: qa
+                      sprint: "5-with-bugs"
+                      node_version: "16"
+                    - branch: main
+                      environment: production
+                      sprint: "5"
+                      node_version: "22.2.0"
 
-      - name: Install (dev) Dependencies
-        run: |
-          cd sprint${{ matrix.sprint }}/API
-          composer update --no-progress --prefer-dist
-      - name: Install Dependencies
-        run: |
-          cd sprint${{ matrix.sprint }}/API
-          composer update --no-dev --prefer-dist --optimize-autoloader
-          composer dump-autoload -o
-      - name: Make envfile
-        uses: danielr1996/envsubst-action@1.0.0
+        # Only run deployment for matching branches
+        if: |
+            (github.ref == 'refs/heads/develop' && matrix.branch == 'develop') ||
+            (github.ref == 'refs/heads/main' && matrix.branch == 'main')
+
+        environment: ${{ matrix.environment }}
+
         env:
-          SECRET_DB: ${{ secrets.SECRET_DB }}
-          SECRET_DB_USER: ${{ secrets.SECRET_DB_USER }}
-          SECRET_DB_PASS: ${{ secrets.SECRET_DB_PASS }}
-          SECRET_GOOGLE_ID: ${{ env.SECRET_GOOGLE_ID }}
-          SECRET_GOOGLE_SECRET: ${{ env.SECRET_GOOGLE_SECRET }}
-          SECRET_GITHUB_ID: ${{ env.SECRET_GITHUB_ID }}
-          SECRET_GITHUB_SECRET: ${{ env.SECRET_GITHUB_SECRET }}
-        with:
-          input: sprint${{ matrix.sprint }}/API/.env_template
-          output: sprint${{ matrix.sprint }}/API/.env
+            NODE_VERSION: ${{ matrix.node_version }}
+            ENVIRONMENT: ${{ matrix.environment }}
+            SECRET_GOOGLE_ID: ${{ matrix.branch == 'main' && secrets.SECRET_GOOGLE_ID || secrets.QA_SECRET_GOOGLE_ID }}
+            SECRET_GOOGLE_SECRET: ${{ matrix.branch == 'main' && secrets.SECRET_GOOGLE_SECRET || secrets.QA_SECRET_GOOGLE_SECRET }}
+            SECRET_GITHUB_ID: ${{ matrix.branch == 'main' && secrets.SECRET_GITHUB_ID || secrets.QA_SECRET_GITHUB_ID }}
+            SECRET_GITHUB_SECRET: ${{ matrix.branch == 'main' && secrets.SECRET_GITHUB_SECRET || secrets.QA_SECRET_GITHUB_SECRET }}
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.3"
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install (dev) Dependencies
+              run: |
+                  cd sprint${{ matrix.sprint }}/API
+                  composer update --no-progress --prefer-dist
+
+            - name: Install Dependencies
+              run: |
+                  cd sprint${{ matrix.sprint }}/API
+                  composer update --no-dev --prefer-dist --optimize-autoloader
+                  composer dump-autoload -o
+
+            - name: Make envfile
+              uses: danielr1996/envsubst-action@1.0.0
+              env:
+                  SECRET_DB: ${{ matrix.environment == 'production' && secrets.SECRET_DB || secrets.QA_SECRET_DB }}
+                  SECRET_DB_USER: ${{ matrix.environment == 'production' && secrets.SECRET_DB_USER || secrets.QA_SECRET_DB_USER }}
+                  SECRET_DB_PASS: ${{ matrix.environment == 'production' && secrets.SECRET_DB_PASS || secrets.QA_SECRET_DB_PASS }}
+                  SECRET_GOOGLE_ID: ${{ env.SECRET_GOOGLE_ID }}
+                  SECRET_GOOGLE_SECRET: ${{ env.SECRET_GOOGLE_SECRET }}
+                  SECRET_GITHUB_ID: ${{ env.SECRET_GITHUB_ID }}
+                  SECRET_GITHUB_SECRET: ${{ env.SECRET_GITHUB_SECRET }}
+              with:
+                  input: sprint${{ matrix.sprint }}/API/.env_template
+                  output: sprint${{ matrix.sprint }}/API/.env
+
+            - name: Deploy to ${{ matrix.environment }}
+              run: |
+                  echo "Deploying to ${{ matrix.environment }} environment"
+                  # Add your deployment commands here based on environment
+                  # You can use your existing deploy.php with environment-specific tasks

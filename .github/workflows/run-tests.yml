@@ -1,128 +1,116 @@
-name: unit test
+name: Run Tests
 
 on:
-  push:
-    branches: [main]
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [develop, main]
 
-concurrency: production_environment
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
-  test:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout ⚙️
-        uses: actions/checkout@v4
+    # Run tests for all branches (feature, develop, main)
+    test:
+        runs-on: ubuntu-22.04
+        strategy:
+            matrix:
+                test-type: [api, ui]
+                include:
+                    - test-type: api
+                      sprint-folder: sprint5-with-bugs
+                    - test-type: ui
+                      sprint-folder: sprint5-with-bugs
 
-      - name: Start containers 🐳
-        run: |
-          export DISABLE_LOGGING=true
-          export SPRINT_FOLDER=sprint5-with-bugs
-          docker compose -f docker-compose.yml up -d
-      - name: Sleep for 60 seconds
-        run: sleep 60s
-        shell: bash
-      - name: Create & Seed database 🌱
-        run: |
-          docker compose exec -T laravel-api php artisan migrate:refresh --seed
-      - name: GET Version
-        run: curl -v -X GET 'http://localhost:8091/status'
-      - name: POST login
-        run: |
-          curl -v -X POST 'http://localhost:8091/users/login' \
-          -H 'Content-Type: application/json' \
-          --data-raw '{"email":"customer@practicesoftwaretesting.com","password":"welcome01"}'
+        steps:
+            - name: Checkout ⚙️
+              uses: actions/checkout@v4
 
-      # Laravel API Tests
-      - name: Setup PHP for API tests 🐘
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.3"
-      - name: Install API Dependencies 📦
-        run: |
-          cd sprint5-with-bugs/API
-          sudo chown -R $USER:$USER .
-          composer install --no-progress --prefer-dist --no-interaction
+            # Common setup for both API and UI tests
+            - name: Start containers 🐳
+              if: matrix.test-type == 'api'
+              run: |
+                  export DISABLE_LOGGING=true
+                  export SPRINT_FOLDER=${{ matrix.sprint-folder }}
+                  docker compose -f docker-compose.yml up -d
 
-      - name: Run Laravel Unit Tests 🧪
-        run: |
-          cd sprint5-with-bugs/API
-          # Setup test environment
-          cp .env.example .env.testing || cp .env .env.testing
-          echo 'APP_ENV=testing' >> .env.testing
-          echo 'DB_CONNECTION=sqlite' >> .env.testing
-          echo 'DB_DATABASE=:memory:' >> .env.testing
-          echo 'CACHE_DRIVER=array' >> .env.testing
-          echo 'SESSION_DRIVER=array' >> .env.testing
-          echo 'QUEUE_CONNECTION=sync' >> .env.testing
+            - name: Wait for services 🕐
+              if: matrix.test-type == 'api'
+              run: sleep 60s
 
-          # Clear config cache
-          php artisan config:clear
+            - name: Create & Seed database 🌱
+              if: matrix.test-type == 'api'
+              run: |
+                  docker compose exec -T laravel-api php artisan migrate:refresh --seed
 
-          # Run tests but don't fail the workflow
-          echo "🧪 Running Laravel tests (some may fail due to Sprint 5 'with-bugs' nature)"
-          php artisan test --env=testing --testdox || {
-            echo "⚠️ Tests completed with some failures (expected for 'with-bugs' version)"
-          }
+            # API Tests
+            - name: Setup PHP for API tests 🐘
+              if: matrix.test-type == 'api'
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.3"
 
-      - name: Install node ⚙️
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install UI Dependencies 📦
-        continue-on-error: true
-        run: |
-          cd sprint5-with-bugs/UI
+            - name: Install API Dependencies 📦
+              if: matrix.test-type == 'api'
+              run: |
+                  cd ${{ matrix.sprint-folder }}/API
+                  sudo chown -R $USER:$USER .
+                  composer install --no-progress --prefer-dist --no-interaction
 
-          # Step 1: Clean and fix permissions
-          echo "🧹 Cleaning previous installation..."
-          sudo rm -rf node_modules package-lock.json .npm 2>/dev/null || true
-          npm cache clean --force 2>/dev/null || true
-          sudo chown -R $USER:$USER . 2>/dev/null || true
+            - name: Run Laravel Unit Tests 🧪
+              if: matrix.test-type == 'api'
+              run: |
+                  cd ${{ matrix.sprint-folder }}/API
+                  cp .env.example .env.testing || cp .env .env.testing
+                  echo 'APP_ENV=testing' >> .env.testing
+                  echo 'DB_CONNECTION=sqlite' >> .env.testing
+                  echo 'DB_DATABASE=:memory:' >> .env.testing
+                  echo 'CACHE_DRIVER=array' >> .env.testing
+                  echo 'SESSION_DRIVER=array' >> .env.testing
+                  echo 'QUEUE_CONNECTION=sync' >> .env.testing
 
-          # Step 2: Try multiple installation strategies
-          echo "📦 Installing dependencies..."
-          if npm ci --legacy-peer-deps; then
-            echo "✅ npm ci succeeded"
-          elif npm install --legacy-peer-deps; then
-            echo "✅ npm install succeeded"
-          elif npm install --force; then
-            echo "✅ npm install --force succeeded"
-          else
-            echo "❌ All npm install methods failed, skipping UI tests"
-            echo "SKIP_UI_TESTS=true" >> $GITHUB_ENV
-            exit 0
-          fi
+                  php artisan config:clear
+                  php artisan test --env=testing --testdox
 
-          # Step 3: Get Playwright version
-          PLAYWRIGHT_VERSION=$(npm list @playwright/test --json 2>/dev/null | jq -r '.dependencies["@playwright/test"].version // "1.40.0"')
-          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
-          echo "✅ Detected Playwright version: $PLAYWRIGHT_VERSION"
+            # UI Tests
+            - name: Install Node ⚙️
+              if: matrix.test-type == 'ui'
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
 
-      # Cache browser binaries, cache key is based on Playwright version and OS
-      - name: 🧰 Cache Playwright browser binaries
-        uses: actions/cache@v3
-        id: playwright-cache
-        with:
-          path: "~/.cache/ms-playwright"
-          key: "${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}"
-          restore-keys: |
-            ${{ runner.os }}-playwright-
+            - name: Install UI Dependencies 📦
+              if: matrix.test-type == 'ui'
+              run: |
+                  cd ${{ matrix.sprint-folder }}/UI
+                  npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
-      # Install browser binaries & OS dependencies if cache missed
-      - name: 🏗 Install Playwright browser binaries & OS dependencies
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: |
-          npx playwright install --with-deps
+            - name: Cache Playwright browser binaries 🧰
+              if: matrix.test-type == 'ui'
+              uses: actions/cache@v3
+              with:
+                  path: "~/.cache/ms-playwright"
+                  key: "${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}"
 
-      # Install only the OS dependencies if cache hit
-      - name: 🏗 Install Playwright OS dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: |
-          npx playwright install-deps
+            - name: Install Playwright 🎭
+              if: matrix.test-type == 'ui'
+              run: |
+                  cd ${{ matrix.sprint-folder }}/UI
+                  npx playwright install --with-deps
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report 📊
-          path: sprint5-with-bugs/UI/playwright-report/
-          retention-days: 10
+            - name: Run Playwright Tests 🎭
+              if: matrix.test-type == 'ui'
+              run: |
+                  cd ${{ matrix.sprint-folder }}/UI
+                  npx playwright test
+
+            - name: Upload test results 📊
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: ${{ matrix.test-type }}-test-results
+                  path: |
+                      ${{ matrix.sprint-folder }}/UI/playwright-report/
+                      ${{ matrix.sprint-folder }}/UI/test-results/
+                      ${{ matrix.sprint-folder }}/API/storage/logs/
