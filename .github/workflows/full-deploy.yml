@@ -1,295 +1,295 @@
-name: full-deploy
+# name: full-deploy
 
-on:
-    push:
-        branches: [main, feature/*, develop]
-    pull_request:
-        branches: [main, develop]
-    workflow_dispatch:
+# on:
+#     push:
+#         branches: [main, feature/*, develop]
+#     pull_request:
+#         branches: [main, develop]
+#     workflow_dispatch:
 
-concurrency: production_environment
+# concurrency: production_environment
 
-jobs:
-    test:
-        runs-on: ubuntu-22.04
-        steps:
-            - name: Checkout ⚙️
-              uses: actions/checkout@v4
+# jobs:
+#     test:
+#         runs-on: ubuntu-22.04
+#         steps:
+#             - name: Checkout ⚙️
+#               uses: actions/checkout@v4
 
-            - name: Start containers 🐳
-              run: |
-                  export DISABLE_LOGGING=true
-                  export SPRINT_FOLDER=sprint5-with-bugs
-                  docker compose -f docker-compose.yml up -d
+#             - name: Start containers 🐳
+#               run: |
+#                   export DISABLE_LOGGING=true
+#                   export SPRINT_FOLDER=sprint5-with-bugs
+#                   docker compose -f docker-compose.yml up -d
 
-            - name: Sleep for 60 seconds
-              run: sleep 60s
-              shell: bash
+#             - name: Sleep for 60 seconds
+#               run: sleep 60s
+#               shell: bash
 
-            - name: Create & Seed database 🌱
-              run: |
-                  docker compose exec -T laravel-api php artisan migrate:refresh --seed
+#             - name: Create & Seed database 🌱
+#               run: |
+#                   docker compose exec -T laravel-api php artisan migrate:refresh --seed
 
-            - name: GET Version
-              run: curl -v -X GET 'http://localhost:8091/status'
+#             - name: GET Version
+#               run: curl -v -X GET 'http://localhost:8091/status'
 
-            - name: POST login
-              run: |
-                  curl -v -X POST 'http://localhost:8091/users/login' \
-                  -H 'Content-Type: application/json' \
-                  --data-raw '{"email":"customer@practicesoftwaretesting.com","password":"welcome01"}'
+#             - name: POST login
+#               run: |
+#                   curl -v -X POST 'http://localhost:8091/users/login' \
+#                   -H 'Content-Type: application/json' \
+#                   --data-raw '{"email":"customer@practicesoftwaretesting.com","password":"welcome01"}'
 
-            # Laravel API Tests
-            - name: Setup PHP for API tests 🐘
-              uses: shivammathur/setup-php@v2
-              with:
-                  php-version: "8.3"
-                  tools: none
-                  update: false
+#             # Laravel API Tests
+#             - name: Setup PHP for API tests 🐘
+#               uses: shivammathur/setup-php@v2
+#               with:
+#                   php-version: "8.3"
+#                   tools: none
+#                   update: false
 
-            - name: Install API Dependencies 📦
-              run: |
-                  cd sprint5-with-bugs/API
-                  sudo chown -R $USER:$USER .
-                  composer install --no-progress --prefer-dist --no-interaction
+#             - name: Install API Dependencies 📦
+#               run: |
+#                   cd sprint5-with-bugs/API
+#                   sudo chown -R $USER:$USER .
+#                   composer install --no-progress --prefer-dist --no-interaction
 
-            - name: Run Laravel Unit Tests 🧪
-              run: |
-                  cd sprint5-with-bugs/API
-                  cp .env.example .env.testing || cp .env .env.testing
-                  echo 'APP_ENV=testing' >> .env.testing
-                  echo 'DB_CONNECTION=sqlite' >> .env.testing
-                  echo 'DB_DATABASE=:memory:' >> .env.testing
-                  echo 'CACHE_DRIVER=array' >> .env.testing
-                  echo 'SESSION_DRIVER=array' >> .env.testing
-                  echo 'QUEUE_CONNECTION=sync' >> .env.testing
-                  php artisan config:clear
-                  echo "🧪 Running Laravel tests (some may fail due to Sprint 5 'with-bugs' nature)"
-                  php artisan test --env=testing --testdox || {
-                    echo "⚠️ Tests completed with some failures (expected for 'with-bugs' version)"
-                  }
+#             - name: Run Laravel Unit Tests 🧪
+#               run: |
+#                   cd sprint5-with-bugs/API
+#                   cp .env.example .env.testing || cp .env .env.testing
+#                   echo 'APP_ENV=testing' >> .env.testing
+#                   echo 'DB_CONNECTION=sqlite' >> .env.testing
+#                   echo 'DB_DATABASE=:memory:' >> .env.testing
+#                   echo 'CACHE_DRIVER=array' >> .env.testing
+#                   echo 'SESSION_DRIVER=array' >> .env.testing
+#                   echo 'QUEUE_CONNECTION=sync' >> .env.testing
+#                   php artisan config:clear
+#                   echo "🧪 Running Laravel tests (some may fail due to Sprint 5 'with-bugs' nature)"
+#                   php artisan test --env=testing --testdox || {
+#                     echo "⚠️ Tests completed with some failures (expected for 'with-bugs' version)"
+#                   }
 
-            - name: Install node ⚙️
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 22
+#             - name: Install node ⚙️
+#               uses: actions/setup-node@v4
+#               with:
+#                   node-version: 22
 
-            - name: Install UI Dependencies 📦
-              continue-on-error: true
-              run: |
-                  cd sprint5-with-bugs/UI
-                  echo "🧹 Cleaning previous installation..."
-                  sudo rm -rf node_modules package-lock.json .npm 2>/dev/null || true
-                  npm cache clean --force 2>/dev/null || true
-                  sudo chown -R $USER:$USER . 2>/dev/null || true
-                  echo "📦 Installing dependencies..."
-                  if npm ci --legacy-peer-deps; then
-                    echo "✅ npm ci succeeded"
-                  elif npm install --legacy-peer-deps; then
-                    echo "✅ npm install succeeded"
-                  elif npm install --force; then
-                    echo "✅ npm install --force succeeded"
-                  else
-                    echo "❌ All npm install methods failed, skipping UI tests"
-                    echo "SKIP_UI_TESTS=true" >> $GITHUB_ENV
-                    exit 0
-                  fi
-                  PLAYWRIGHT_VERSION=$(npm list @playwright/test --json 2>/dev/null | jq -r '.dependencies["@playwright/test"].version // "1.40.0"')
-                  echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
-                  echo "✅ Detected Playwright version: $PLAYWRIGHT_VERSION"
+#             - name: Install UI Dependencies 📦
+#               continue-on-error: true
+#               run: |
+#                   cd sprint5-with-bugs/UI
+#                   echo "🧹 Cleaning previous installation..."
+#                   sudo rm -rf node_modules package-lock.json .npm 2>/dev/null || true
+#                   npm cache clean --force 2>/dev/null || true
+#                   sudo chown -R $USER:$USER . 2>/dev/null || true
+#                   echo "📦 Installing dependencies..."
+#                   if npm ci --legacy-peer-deps; then
+#                     echo "✅ npm ci succeeded"
+#                   elif npm install --legacy-peer-deps; then
+#                     echo "✅ npm install succeeded"
+#                   elif npm install --force; then
+#                     echo "✅ npm install --force succeeded"
+#                   else
+#                     echo "❌ All npm install methods failed, skipping UI tests"
+#                     echo "SKIP_UI_TESTS=true" >> $GITHUB_ENV
+#                     exit 0
+#                   fi
+#                   PLAYWRIGHT_VERSION=$(npm list @playwright/test --json 2>/dev/null | jq -r '.dependencies["@playwright/test"].version // "1.40.0"')
+#                   echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
+#                   echo "✅ Detected Playwright version: $PLAYWRIGHT_VERSION"
 
-            - name: 🧰 Cache Playwright browser binaries
-              uses: actions/cache@v3
-              id: playwright-cache
-              with:
-                  path: "~/.cache/ms-playwright"
-                  key: "${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}"
-                  restore-keys: |
-                      ${{ runner.os }}-playwright-
+#             - name: 🧰 Cache Playwright browser binaries
+#               uses: actions/cache@v3
+#               id: playwright-cache
+#               with:
+#                   path: "~/.cache/ms-playwright"
+#                   key: "${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}"
+#                   restore-keys: |
+#                       ${{ runner.os }}-playwright-
 
-            - name: 🏗 Install Playwright browser binaries & OS dependencies
-              if: steps.playwright-cache.outputs.cache-hit != 'true'
-              run: |
-                  npx playwright install --with-deps
+#             - name: 🏗 Install Playwright browser binaries & OS dependencies
+#               if: steps.playwright-cache.outputs.cache-hit != 'true'
+#               run: |
+#                   npx playwright install --with-deps
 
-            - name: 🏗 Install Playwright OS dependencies
-              if: steps.playwright-cache.outputs.cache-hit == 'true'
-              run: |
-                  npx playwright install-deps
+#             - name: 🏗 Install Playwright OS dependencies
+#               if: steps.playwright-cache.outputs.cache-hit == 'true'
+#               run: |
+#                   npx playwright install-deps
 
-            - uses: actions/upload-artifact@v4
-              if: always()
-              with:
-                  name: playwright-report 📊
-                  path: sprint5-with-bugs/UI/playwright-report/
-                  retention-days: 10
+#             - uses: actions/upload-artifact@v4
+#               if: always()
+#               with:
+#                   name: playwright-report 📊
+#                   path: sprint5-with-bugs/UI/playwright-report/
+#                   retention-days: 10
 
-    deploy:
-        runs-on: ubuntu-latest
-        needs: test
-        strategy:
-            matrix:
-                sprint: ["5-with-bugs"]
-        env:
-            NODE_VERSION: ${{ matrix.sprint == '5' && '22.2.0' || '16' }}
-            SECRET_GOOGLE_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_ID || '' }}
-            SECRET_GOOGLE_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_SECRET || '' }}
-            SECRET_GITHUB_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_ID || '' }}
-            SECRET_GITHUB_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_SECRET || '' }}
-            ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || (github.ref == 'refs/heads/develop' && 'qa' || 'staging') }}
-            VPS_HOST: ${{ github.ref == 'refs/heads/main' && 'prod-vps.example.com' || 'qa-vps.example.com' }}
-        steps:
-            - uses: actions/checkout@v4
+#     deploy:
+#         runs-on: ubuntu-latest
+#         needs: test
+#         strategy:
+#             matrix:
+#                 sprint: ["5-with-bugs"]
+#         env:
+#             NODE_VERSION: ${{ matrix.sprint == '5' && '22.2.0' || '16' }}
+#             SECRET_GOOGLE_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_ID || '' }}
+#             SECRET_GOOGLE_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GOOGLE_SECRET || '' }}
+#             SECRET_GITHUB_ID: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_ID || '' }}
+#             SECRET_GITHUB_SECRET: ${{ matrix.sprint == '5' && secrets.SECRET_GITHUB_SECRET || '' }}
+#             ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || (github.ref == 'refs/heads/develop' && 'qa' || 'staging') }}
+#             VPS_HOST: ${{ github.ref == 'refs/heads/main' && 'prod-vps.example.com' || 'qa-vps.example.com' }}
+#         steps:
+#             - uses: actions/checkout@v4
 
-            - name: Detect Environment 🎯
-              run: |
-                  echo "🌍 Environment: ${{ env.ENVIRONMENT }}"
-                  echo "🖥️ Target VPS: ${{ env.VPS_HOST }}"
-                  echo "🌿 Branch: ${{ github.ref_name }}"
+#             - name: Detect Environment 🎯
+#               run: |
+#                   echo "🌍 Environment: ${{ env.ENVIRONMENT }}"
+#                   echo "🖥️ Target VPS: ${{ env.VPS_HOST }}"
+#                   echo "🌿 Branch: ${{ github.ref_name }}"
 
-            - name: Setup PHP
-              uses: shivammathur/setup-php@v2
-              with:
-                  php-version: "8.3"
+#             - name: Setup PHP
+#               uses: shivammathur/setup-php@v2
+#               with:
+#                   php-version: "8.3"
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
+#             - name: Setup Node
+#               uses: actions/setup-node@v4
+#               with:
+#                   node-version: ${{ env.NODE_VERSION }}
 
-            - name: Install (dev) Dependencies
-              run: |
-                  cd sprint${{ matrix.sprint }}/API
-                  composer update --no-progress --prefer-dist
+#             - name: Install (dev) Dependencies
+#               run: |
+#                   cd sprint${{ matrix.sprint }}/API
+#                   composer update --no-progress --prefer-dist
 
-            - name: Install Dependencies
-              run: |
-                  cd sprint${{ matrix.sprint }}/API
-                  composer update --no-dev --prefer-dist --optimize-autoloader
-                  composer dump-autoload -o
+#             - name: Install Dependencies
+#               run: |
+#                   cd sprint${{ matrix.sprint }}/API
+#                   composer update --no-dev --prefer-dist --optimize-autoloader
+#                   composer dump-autoload -o
 
-            - name: Make envfile
-              uses: danielr1996/envsubst-action@1.0.0
-              env:
-                  SECRET_DB: ${{ secrets.SECRET_DB }}
-                  SECRET_DB_USER: ${{ secrets.SECRET_DB_USER }}
-                  SECRET_DB_PASS: ${{ secrets.SECRET_DB_PASS }}
-                  SECRET_GOOGLE_ID: ${{ env.SECRET_GOOGLE_ID }}
-                  SECRET_GOOGLE_SECRET: ${{ env.SECRET_GOOGLE_SECRET }}
-                  SECRET_GITHUB_ID: ${{ env.SECRET_GITHUB_ID }}
-                  SECRET_GITHUB_SECRET: ${{ env.SECRET_GITHUB_SECRET }}
-              with:
-                  input: sprint${{ matrix.sprint }}/API/.env_template
-                  output: sprint${{ matrix.sprint }}/API/.env
+#             - name: Make envfile
+#               uses: danielr1996/envsubst-action@1.0.0
+#               env:
+#                   SECRET_DB: ${{ secrets.SECRET_DB }}
+#                   SECRET_DB_USER: ${{ secrets.SECRET_DB_USER }}
+#                   SECRET_DB_PASS: ${{ secrets.SECRET_DB_PASS }}
+#                   SECRET_GOOGLE_ID: ${{ env.SECRET_GOOGLE_ID }}
+#                   SECRET_GOOGLE_SECRET: ${{ env.SECRET_GOOGLE_SECRET }}
+#                   SECRET_GITHUB_ID: ${{ env.SECRET_GITHUB_ID }}
+#                   SECRET_GITHUB_SECRET: ${{ env.SECRET_GITHUB_SECRET }}
+#               with:
+#                   input: sprint${{ matrix.sprint }}/API/.env_template
+#                   output: sprint${{ matrix.sprint }}/API/.env
 
-            # Production Deployment
-            - name: Deploy to Production VPS 🚀
-              if: github.ref == 'refs/heads/main'
-              run: |
-                  echo "🏭 PRODUCTION DEPLOYMENT"
-                  echo "=========================================="
-                  echo "🖥️ Connecting to Production VPS: prod-vps.example.com"
-                  echo "🔐 Using production SSH key"
-                  echo "🌿 Deploying from main branch"
-                  echo "⚙️ Environment: production"
-                  echo "🗄️ Database: production_db"
-                  echo "🚀 Starting production deployment..."
-                  sleep 3
-                  echo "✅ Code pulled from main branch"
-                  echo "✅ Dependencies installed"
-                  echo "✅ Database migrations applied"
-                  echo "✅ Cache cleared and optimized"
-                  echo "✅ Production services restarted"
-                  echo "🎉 PRODUCTION DEPLOYMENT COMPLETED!"
+#             # Production Deployment
+#             - name: Deploy to Production VPS 🚀
+#               if: github.ref == 'refs/heads/main'
+#               run: |
+#                   echo "🏭 PRODUCTION DEPLOYMENT"
+#                   echo "=========================================="
+#                   echo "🖥️ Connecting to Production VPS: prod-vps.example.com"
+#                   echo "🔐 Using production SSH key"
+#                   echo "🌿 Deploying from main branch"
+#                   echo "⚙️ Environment: production"
+#                   echo "🗄️ Database: production_db"
+#                   echo "🚀 Starting production deployment..."
+#                   sleep 3
+#                   echo "✅ Code pulled from main branch"
+#                   echo "✅ Dependencies installed"
+#                   echo "✅ Database migrations applied"
+#                   echo "✅ Cache cleared and optimized"
+#                   echo "✅ Production services restarted"
+#                   echo "🎉 PRODUCTION DEPLOYMENT COMPLETED!"
 
-            # QA Deployment
-            - name: Deploy to QA VPS 🧪
-              if: github.ref == 'refs/heads/develop'
-              run: |
-                  echo "🧪 QA DEPLOYMENT"
-                  echo "=========================================="
-                  echo "🖥️ Connecting to QA VPS: qa-vps.example.com"
-                  echo "🔐 Using QA SSH key"
-                  echo "🌿 Deploying from develop branch"
-                  echo "⚙️ Environment: qa"
-                  echo "🗄️ Database: qa_db"
-                  echo "🧪 Starting QA deployment..."
-                  sleep 2
-                  echo "✅ Code pulled from develop branch"
-                  echo "✅ Dependencies installed"
-                  echo "✅ Test database seeded"
-                  echo "✅ Debug mode enabled"
-                  echo "✅ QA services restarted"
-                  echo "🎉 QA DEPLOYMENT COMPLETED!"
+#             # QA Deployment
+#             - name: Deploy to QA VPS 🧪
+#               if: github.ref == 'refs/heads/develop'
+#               run: |
+#                   echo "🧪 QA DEPLOYMENT"
+#                   echo "=========================================="
+#                   echo "🖥️ Connecting to QA VPS: qa-vps.example.com"
+#                   echo "🔐 Using QA SSH key"
+#                   echo "🌿 Deploying from develop branch"
+#                   echo "⚙️ Environment: qa"
+#                   echo "🗄️ Database: qa_db"
+#                   echo "🧪 Starting QA deployment..."
+#                   sleep 2
+#                   echo "✅ Code pulled from develop branch"
+#                   echo "✅ Dependencies installed"
+#                   echo "✅ Test database seeded"
+#                   echo "✅ Debug mode enabled"
+#                   echo "✅ QA services restarted"
+#                   echo "🎉 QA DEPLOYMENT COMPLETED!"
 
-            # Developer/Feature Deployment
-            - name: Deploy to Dev VPS 👨‍💻
-              if: startsWith(github.ref, 'refs/heads/feature/')
-              run: |
-                  echo "👨‍💻 DEV DEPLOYMENT"
-                  echo "=========================================="
-                  echo "🖥️ Connecting to Dev VPS: dev-vps.example.com"
-                  echo "🔐 Using Dev SSH key"
-                  echo "🌿 Deploying from ${{ github.ref_name }} branch"
-                  echo "⚙️ Environment: dev"
-                  echo "🗄️ Database: dev_db"
-                  echo "👨‍💻 Starting Dev deployment..."
-                  sleep 1
-                  echo "✅ Code pulled from ${{ github.ref_name }} branch"
-                  echo "✅ Dependencies installed"
-                  echo "✅ Dev database seeded"
-                  echo "✅ Debug mode enabled"
-                  echo "✅ Dev services restarted"
-                  echo "🎉 DEV DEPLOYMENT COMPLETED!"
+#             # Developer/Feature Deployment
+#             - name: Deploy to Dev VPS 👨‍💻
+#               if: startsWith(github.ref, 'refs/heads/feature/')
+#               run: |
+#                   echo "👨‍💻 DEV DEPLOYMENT"
+#                   echo "=========================================="
+#                   echo "🖥️ Connecting to Dev VPS: dev-vps.example.com"
+#                   echo "🔐 Using Dev SSH key"
+#                   echo "🌿 Deploying from ${{ github.ref_name }} branch"
+#                   echo "⚙️ Environment: dev"
+#                   echo "🗄️ Database: dev_db"
+#                   echo "👨‍💻 Starting Dev deployment..."
+#                   sleep 1
+#                   echo "✅ Code pulled from ${{ github.ref_name }} branch"
+#                   echo "✅ Dependencies installed"
+#                   echo "✅ Dev database seeded"
+#                   echo "✅ Debug mode enabled"
+#                   echo "✅ Dev services restarted"
+#                   echo "🎉 DEV DEPLOYMENT COMPLETED!"
 
-            # Environment-specific post-deployment tasks
-            - name: Production Post-Deployment Tasks 🏭
-              if: github.ref == 'refs/heads/main'
-              run: |
-                  echo "🔧 Running production post-deployment tasks..."
-                  echo "✅ SSL certificates verified"
-                  echo "✅ CDN cache purged"
-                  echo "✅ Monitoring alerts configured"
-                  echo "✅ Backup jobs scheduled"
-                  echo "📧 Production deployment notification sent"
+#             # Environment-specific post-deployment tasks
+#             - name: Production Post-Deployment Tasks 🏭
+#               if: github.ref == 'refs/heads/main'
+#               run: |
+#                   echo "🔧 Running production post-deployment tasks..."
+#                   echo "✅ SSL certificates verified"
+#                   echo "✅ CDN cache purged"
+#                   echo "✅ Monitoring alerts configured"
+#                   echo "✅ Backup jobs scheduled"
+#                   echo "📧 Production deployment notification sent"
 
-            - name: QA Post-Deployment Tasks 🧪
-              if: github.ref == 'refs/heads/develop'
-              run: |
-                  echo "🔧 Running QA post-deployment tasks..."
-                  echo "✅ Test data populated"
-                  echo "✅ Debug tools enabled"
-                  echo "✅ Test reports configured"
-                  echo "🧪 Smoke tests initiated"
-                  echo "📧 QA deployment notification sent"
+#             - name: QA Post-Deployment Tasks 🧪
+#               if: github.ref == 'refs/heads/develop'
+#               run: |
+#                   echo "🔧 Running QA post-deployment tasks..."
+#                   echo "✅ Test data populated"
+#                   echo "✅ Debug tools enabled"
+#                   echo "✅ Test reports configured"
+#                   echo "🧪 Smoke tests initiated"
+#                   echo "📧 QA deployment notification sent"
 
-            - name: Dev Post-Deployment Tasks 👨‍💻
-              if: startsWith(github.ref, 'refs/heads/feature/')
-              run: |
-                  echo "🔧 Running Dev post-deployment tasks..."
-                  echo "✅ Dev test data populated"
-                  echo "✅ Dev debug tools enabled"
-                  echo "✅ Dev test reports configured"
-                  echo "👨‍💻 Dev smoke tests initiated"
-                  echo "📧 Dev deployment notification sent"
+#             - name: Dev Post-Deployment Tasks 👨‍💻
+#               if: startsWith(github.ref, 'refs/heads/feature/')
+#               run: |
+#                   echo "🔧 Running Dev post-deployment tasks..."
+#                   echo "✅ Dev test data populated"
+#                   echo "✅ Dev debug tools enabled"
+#                   echo "✅ Dev test reports configured"
+#                   echo "👨‍💻 Dev smoke tests initiated"
+#                   echo "📧 Dev deployment notification sent"
 
-            - name: Deployment Summary 📊
-              run: |
-                  echo "📊 DEPLOYMENT SUMMARY"
-                  echo "=========================================="
-                  echo "🌍 Environment: ${{ env.ENVIRONMENT }}"
-                  echo "🖥️ Target Server: ${{ env.VPS_HOST }}"
-                  echo "🌿 Branch: ${{ github.ref_name }}"
-                  echo "⏰ Deployment Time: $(date)"
-                  echo "👤 Triggered by: ${{ github.actor }}"
-                  echo "🔗 Commit: ${{ github.sha }}"
-                  echo "✅ Deployment Status: SUCCESS"
-                  echo "=========================================="
+#             - name: Deployment Summary 📊
+#               run: |
+#                   echo "📊 DEPLOYMENT SUMMARY"
+#                   echo "=========================================="
+#                   echo "🌍 Environment: ${{ env.ENVIRONMENT }}"
+#                   echo "🖥️ Target Server: ${{ env.VPS_HOST }}"
+#                   echo "🌿 Branch: ${{ github.ref_name }}"
+#                   echo "⏰ Deployment Time: $(date)"
+#                   echo "👤 Triggered by: ${{ github.actor }}"
+#                   echo "🔗 Commit: ${{ github.sha }}"
+#                   echo "✅ Deployment Status: SUCCESS"
+#                   echo "=========================================="
 
-                  if [ "${{ env.ENVIRONMENT }}" = "production" ]; then
-                    echo "🌐 Production URL: https://prod.practicesoftwaretesting.com"
-                  elif [ "${{ env.ENVIRONMENT }}" = "qa" ]; then
-                    echo "🌐 QA URL: https://qa.practicesoftwaretesting.com"
-                  else
-                    echo "🌐 Dev URL: https://dev.practicesoftwaretesting.com"
-                  fi
+#                   if [ "${{ env.ENVIRONMENT }}" = "production" ]; then
+#                     echo "🌐 Production URL: https://prod.practicesoftwaretesting.com"
+#                   elif [ "${{ env.ENVIRONMENT }}" = "qa" ]; then
+#                     echo "🌐 QA URL: https://qa.practicesoftwaretesting.com"
+#                   else
+#                     echo "🌐 Dev URL: https://dev.practicesoftwaretesting.com"
+#                   fi
