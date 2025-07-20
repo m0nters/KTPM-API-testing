@@ -39,11 +39,11 @@ jobs:
                     (github.event.workflow_run.head_branch == 'develop' && 'qa-vps.example.com' || 'dev-vps.example.com') }}
 
         steps:
-            - name: Checkout from SO
-              uses: actions/checkout@v2
-              with:
-                  repository: "${{ github.event.workflow_run.head_repository.full_name }}"
-                  ref: ${{ github.event.workflow_run.head_branch }}
+            # - name: Checkout from SO
+            #   uses: actions/checkout@v2
+            #   with:
+            #       repository: "${{ github.event.workflow_run.head_repository.full_name }}"
+            #       ref: ${{ github.event.workflow_run.head_branch }}
 
             # - name: Checkout triggered branch
             #   uses: actions/checkout@v4
