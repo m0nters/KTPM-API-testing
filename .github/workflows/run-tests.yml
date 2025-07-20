@@ -1,5 +1,4 @@
-name: unit test
-
+name: full-deploy
 on:
     push:
         branches: [main, feature/*, develop]
