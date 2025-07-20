@@ -5,9 +5,12 @@ on:
         workflows: ["unit test"]
         types:
             - completed
-        branches: [main, feature/*, develop]
     # Keep manual triggers for testing
     workflow_dispatch:
+    push:
+        branches: [feature/*]
+    pull_request:
+        branches: [main, develop]
 
 concurrency: production_environment
 
