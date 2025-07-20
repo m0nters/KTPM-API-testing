@@ -1,11 +1,6 @@
 name: deploy
 
 on:
-    workflow_run:
-        workflows: ["unit test"]
-        types:
-            - completed
-    # Keep manual triggers for testing
     workflow_dispatch:
     push:
         branches: [feature/*]
