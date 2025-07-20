@@ -1,9 +1,8 @@
 name: deploy
 
 on:
-    workflow_dispatch:
     push:
-        branches: [feature/*]
+        branches: [main, feature/*, develop]
     pull_request:
         branches: [main, develop]
 
