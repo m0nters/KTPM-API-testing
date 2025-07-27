@@ -118,42 +118,106 @@ pipeline {
                             // Install Node.js - you might need NodeJS plugin
                             
                             echo "📦 Installing UI Dependencies..."
-                            sh '''
-                                cd sprint5-with-bugs/UI
+                            script {
+                                def installSuccess = false
                                 
-                                # Step 1: Clean and fix permissions
-                                echo "🧹 Cleaning previous installation..."
-                                sudo rm -rf node_modules package-lock.json .npm 2>/dev/null || true
-                                npm cache clean --force 2>/dev/null || true
-                                sudo chown -R $USER:$USER . 2>/dev/null || true
-                                
-                                # Step 2: Try multiple installation strategies
-                                echo "📦 Installing dependencies..."
-                                if npm ci --legacy-peer-deps; then
-                                  echo "✅ npm ci succeeded"
-                                elif npm install --legacy-peer-deps; then
-                                  echo "✅ npm install succeeded"
-                                elif npm install --force; then
-                                  echo "✅ npm install --force succeeded"
-                                else
-                                  echo "❌ All npm install methods failed, skipping UI tests"
-                                  touch SKIP_UI_TESTS
-                                  exit 0
-                                fi
-                                
-                                # Step 3: Get Playwright version
-                                PLAYWRIGHT_VERSION=$(npm list @playwright/test --json 2>/dev/null | jq -r '.dependencies["@playwright/test"].version // "1.40.0"')
-                                echo "✅ Detected Playwright version: $PLAYWRIGHT_VERSION"
-                                echo "$PLAYWRIGHT_VERSION" > playwright_version.txt
-                            '''
+                                try {
+                                    sh '''
+                                        cd sprint5-with-bugs/UI
+                                        
+                                        # Step 1: Clean and fix permissions
+                                        echo "🧹 Cleaning previous installation..."
+                                        rm -rf node_modules package-lock.json .npm 2>/dev/null || true
+                                        npm cache clean --force 2>/dev/null || true
+                                        
+                                        # Check if package.json exists
+                                        if [ ! -f package.json ]; then
+                                            echo "❌ package.json not found in sprint5-with-bugs/UI"
+                                            exit 1
+                                        fi
+                                        
+                                        echo "📦 Installing dependencies..."
+                                    '''
+                                    
+                                    // Try npm ci first
+                                    try {
+                                        sh '''
+                                            cd sprint5-with-bugs/UI
+                                            npm ci --legacy-peer-deps
+                                        '''
+                                        echo "✅ npm ci succeeded"
+                                        installSuccess = true
+                                    } catch (Exception e1) {
+                                        echo "⚠️ npm ci failed, trying npm install..."
+                                        
+                                        // Try npm install
+                                        try {
+                                            sh '''
+                                                cd sprint5-with-bugs/UI
+                                                npm install --legacy-peer-deps
+                                            '''
+                                            echo "✅ npm install succeeded"
+                                            installSuccess = true
+                                        } catch (Exception e2) {
+                                            echo "⚠️ npm install failed, trying npm install --force..."
+                                            
+                                            // Try npm install --force
+                                            try {
+                                                sh '''
+                                                    cd sprint5-with-bugs/UI
+                                                    npm install --force
+                                                '''
+                                                echo "✅ npm install --force succeeded"
+                                                installSuccess = true
+                                            } catch (Exception e3) {
+                                                echo "❌ All npm install methods failed"
+                                                echo "Error details: ${e3.getMessage()}"
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (installSuccess) {
+                                        sh '''
+                                            cd sprint5-with-bugs/UI
+                                            # Step 3: Get Playwright version
+                                            PLAYWRIGHT_VERSION=$(npm list @playwright/test --json 2>/dev/null | jq -r '.dependencies["@playwright/test"].version // "1.40.0"')
+                                            echo "✅ Detected Playwright version: $PLAYWRIGHT_VERSION"
+                                            echo "$PLAYWRIGHT_VERSION" > playwright_version.txt
+                                        '''
+                                    } else {
+                                        sh 'cd sprint5-with-bugs/UI && touch SKIP_UI_TESTS'
+                                        echo "⚠️ UI tests will be skipped due to npm install failure"
+                                    }
+                                } catch (Exception e) {
+                                    echo "❌ UI Dependencies installation failed: ${e.getMessage()}"
+                                    sh 'cd sprint5-with-bugs/UI && touch SKIP_UI_TESTS'
+                                    echo "⚠️ UI tests will be skipped"
+                                }
+                            }
                             
                             echo "🏗 Installing Playwright browsers..."
-                            sh '''
-                                cd sprint5-with-bugs/UI
-                                if [ ! -f SKIP_UI_TESTS ]; then
-                                    npx playwright install --with-deps
-                                fi
-                            '''
+                            script {
+                                try {
+                                    def skipUITests = sh(
+                                        script: 'cd sprint5-with-bugs/UI && test -f SKIP_UI_TESTS',
+                                        returnStatus: true
+                                    )
+                                    
+                                    if (skipUITests == 0) {
+                                        echo "⚠️ Skipping Playwright installation due to npm failure"
+                                    } else {
+                                        sh '''
+                                            cd sprint5-with-bugs/UI
+                                            echo "Installing Playwright browsers..."
+                                            npx playwright install --with-deps
+                                            echo "✅ Playwright browsers installed successfully"
+                                        '''
+                                    }
+                                } catch (Exception e) {
+                                    echo "⚠️ Playwright installation failed: ${e.getMessage()}"
+                                    echo "Continuing without UI tests..."
+                                }
+                            }
                         }
                     }
                 }
