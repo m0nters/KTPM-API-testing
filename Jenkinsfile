@@ -20,9 +20,9 @@ pipeline {
         }
 
         stage('Deployment') {
-            steps {{
+            steps {
                 echo 'Deploying'
-            }}
+            }
         }
     }
 }
