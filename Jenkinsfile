@@ -15,7 +15,7 @@ pipeline {
 
                     // 2. Start Docker containers
                     sh '''
-                        docker compose -f docker-compose.yml up -d
+                        docker-compose -f docker-compose.yml up -d
                     '''
 
                     // 3. Sleep đợi service ổn định
@@ -23,7 +23,7 @@ pipeline {
 
                     // 4. Migrate + seed DB
                     sh '''
-                        docker compose exec -T laravel-api php artisan migrate:refresh --seed
+                        docker-compose exec -T laravel-api php artisan migrate:refresh --seed
                     '''
 
                     // 5. Cài Laravel dependencies
