@@ -15,6 +15,7 @@ pipeline {
 
                     // 2. Start Docker containers
                     sh '''
+                        docker compose down || true
                         docker compose -f docker-compose.yml up -d
                     '''
 
