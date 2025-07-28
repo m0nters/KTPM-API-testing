@@ -6,6 +6,7 @@ on:
             - completed
         branches: [main, feature/*, develop]
 
+
 concurrency: production_environment
 
 jobs:

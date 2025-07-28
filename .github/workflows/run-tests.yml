@@ -128,3 +128,4 @@ jobs:
                   name: playwright-report 📊
                   path: sprint5-with-bugs/UI/playwright-report/
                   retention-days: 10
+
