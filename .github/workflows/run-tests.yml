@@ -15,7 +15,7 @@ jobs:
       - name: Start containers 🐳
         run: |
           export DISABLE_LOGGING=true
-          export SPRINT_FOLDER=sprint5-with-bugs
+          export SPRINT_FOLDER=${{ env.SPRINT_FOLDER }}
           docker compose -f docker-compose.yml up -d
       - name: Sleep for 60 seconds
         run: sleep 60s
@@ -41,13 +41,13 @@ jobs:
 
       - name: Install API Dependencies 📦
         run: |
-          cd sprint5-with-bugs/API
+          cd ${{ env.SPRINT_FOLDER }}/API
           sudo chown -R $USER:$USER .
           composer install --no-progress --prefer-dist --no-interaction
 
       - name: Run Laravel Unit Tests 🧪
         run: |
-          cd sprint5-with-bugs/API
+          cd ${{ env.SPRINT_FOLDER }}/API
           # Setup test environment
           cp .env.example .env.testing || cp .env .env.testing
           echo 'APP_ENV=testing' >> .env.testing
@@ -73,7 +73,7 @@ jobs:
       - name: Install UI Dependencies 📦
         continue-on-error: true
         run: |
-          cd sprint5-with-bugs/UI
+          cd ${{ env.SPRINT_FOLDER }}/UI
 
           # Step 1: Clean and fix permissions
           echo "🧹 Cleaning previous installation..."
@@ -125,7 +125,7 @@ jobs:
       - name: Run Playwright tests 🧪
         if: env.SKIP_UI_TESTS != 'true'
         run: |
-          cd sprint5-with-bugs/UI  # ✅ Added working directory
+          cd ${{ env.SPRINT_FOLDER }}/UI  # ✅ Added working directory
           echo "🎭 Running Playwright tests from $(pwd)"
           echo "📁 Current directory contents:"
           ls -la
@@ -137,5 +137,5 @@ jobs:
         if: always()
         with:
           name: playwright-report 📊
-          path: sprint5-with-bugs/UI/playwright-report/
+          path: ${{ env.SPRINT_FOLDER }}/UI/playwright-report/
           retention-days: 10
