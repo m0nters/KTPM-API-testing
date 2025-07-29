@@ -12,6 +12,28 @@ jobs:
       - name: Checkout ⚙️
         uses: actions/checkout@v4
 
+      - name: Load Environment Variables 📁
+        run: |
+          if [ -f .env ]; then
+            export $(cat .env | grep -v '^#' | xargs)
+            echo "SPRINT_FOLDER=${SPRINT_FOLDER}" >> $GITHUB_ENV
+            echo "✅ Loaded SPRINT_FOLDER: ${SPRINT_FOLDER}"
+          else
+            echo "⚠️ .env file not found, using default"
+            echo "SPRINT_FOLDER=sprint5-with-bugs" >> $GITHUB_ENV
+          fi
+          echo "🎯 Using sprint: ${SPRINT_FOLDER}"
+
+      - name: Validate Sprint Folder 🔍
+        run: |
+          if [ ! -d "${SPRINT_FOLDER}" ]; then
+            echo "❌ Sprint folder '${SPRINT_FOLDER}' does not exist!"
+            echo "📁 Available folders:"
+            ls -la | grep "^d" | grep "sprint"
+            exit 1
+          fi
+          echo "✅ Sprint folder '${SPRINT_FOLDER}' exists"
+
       - name: Start containers 🐳
         run: |
           export DISABLE_LOGGING=true
