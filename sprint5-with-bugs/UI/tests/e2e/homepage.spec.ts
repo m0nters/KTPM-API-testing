@@ -15,6 +15,6 @@ test.describe('Homepage Tests', () => {
     await page.goto('/');
 
     // Check for common navigation elements
-    await expect(page.locator('[data-test="nav-home"]')).toBeVisible();
+    await expect(page.locator('text=Home')).toBeVisible();
   });
 });
