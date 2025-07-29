@@ -24,12 +24,4 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
   ],
-
-  // ✅ Add web server for Angular
-  webServer: {
-    command: 'npm run start',
-    url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
 });
