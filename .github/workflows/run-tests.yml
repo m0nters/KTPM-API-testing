@@ -1,16 +1,16 @@
 name: run-tests
 on:
-  push:
-    branches: [main, feature/*, develop]
+    push:
+        branches: [main, feature/*, develop]
 
 concurrency: production_environment
 
 jobs:
-  test:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout ⚙️
-        uses: actions/checkout@v4
+    test:
+        runs-on: ubuntu-22.04
+        steps:
+            - name: Checkout ⚙️
+              uses: actions/checkout@v4
 
       - name: Start containers 🐳
         run: |
