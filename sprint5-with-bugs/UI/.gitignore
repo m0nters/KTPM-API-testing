@@ -44,3 +44,10 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# Playwright Test Results and Reports 🎭
+/test-results/
+/playwright-report/
+/playwright/.cache/
+playwright-report-*.zip
+test-results-*.zip
