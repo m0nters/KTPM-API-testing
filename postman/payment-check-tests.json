@@ -1,0 +1,1631 @@
+{
+	"info": {
+		"_postman_id": "95bdbecb-87d4-4217-8940-4dcf3841f6ed",
+		"name": "Payment Check API Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29032332"
+	},
+	"item": [
+		{
+			"name": "TC001 - Valid with \"Bank Transfer\" and account number",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Bank Transfer\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"12345678\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC002 - Valid with \"Credit Card\" and masked number",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC003 - Valid with \"Cash on Delivery\" (no account number)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Cash on Delivery\",\r\n    \"account_name\": \"John Doe\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC004 - Invalid method not in enum",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"InvalidMethod\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC005 - Method with digits",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit1Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC006 - Method with special chars",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit@Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC007 - Method empty",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC008 - Method missing",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC009 - Account_name with digits",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John1Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC010 - Account_name with special chars",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John@Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC011 - Account_name with leading space",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \" John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC012 - Account_name with trailing space",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe \",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC013 - Account_name empty",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC014 - Account_name missing",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC015 - Account_name too short",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"Ab\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC016 - Account_name too long",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC017 - Account_number with letters (Credit Card)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543AB\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC018 - Account_number with special chars",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543@X\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC019 - Account_number with whitespace",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"987 6543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC020 - Account_number empty",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC021 - Account_number missing (Credit Card)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC022 -  Account_number too short (Credit Card)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"123\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC023 - Account_number too long (Credit Card)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": 11111111111111111111\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC024 - Valid Bank Transfer with long account number",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Bank Transfer\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"1234567890123456\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC025 - Bank Transfer account_number too short",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Bank Transfer\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"1234567\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC026  - Bank Transfer account_number too long",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Bank Transfer\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"12345678901234567\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC027 - Unsupported method (404 case)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", () => { pm.response.to.have.status(404); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Gift Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"12345678\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC028 - All fields missing",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC029 - Invalid JSON",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", () => { pm.response.to.have.status(400); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "abc",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC030 - Extra field",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\",\r\n    \"extra\": \"test\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC031 - No auth token (unauthenticated)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", () => { pm.response.to.have.status(401); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC032 - Invalid auth token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", () => { pm.response.to.have.status(401); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC033 - Repeated call with same data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK or 422\", () => {\r",
+							"    const status = pm.response.code;\r",
+							"    pm.expect(status === 200 || status === 422).to.be.true;\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC034 - Combination: Invalid method and account_name",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Invalid\",\r\n    \"account_name\": \"John1Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC035 - Combination: Valid method, invalid account_number",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Credit Card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"invalid\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC036 - Case mismatch in method",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"credit card\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"9876543XX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC037 - Account_number with 'X' in Bank Transfer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Bank Transfer\",\r\n    \"account_name\": \"John Doe\",\r\n    \"account_number\": \"12345X678\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC038 - Missing account_number for Bank Transfer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", () => { pm.response.to.have.status(422); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Bank Transfer\",\r\n    \"account_name\": \"John Doe\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC039 - Valid with Buy Now Pay Later",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Buy Now Pay Later\",\r\n    \"account_name\": \"John Doe\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "TC040 - All methods combination test",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"method\": \"Cash on Delivery\",\r\n    \"account_name\": \"John Doe\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/payment/check",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"payment",
+						"check"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8091"
+		},
+		{
+			"key": "authToken",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwOTEvdXNlcnMvbG9naW4iLCJpYXQiOjE3NTYwOTA2OTUsImV4cCI6MTc3MTY5MDY5NSwibmJmIjoxNzU2MDkwNjk1LCJqdGkiOiJ6eDd4VnUzOFZ5QUxuVm4wIiwic3ViIjoiMiIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjciLCJyb2xlIjoidXNlciJ9.ranXOt_YFGapWYJB2ds_zFm-UVr-JqNU54Rfbvtmd7U"
+		}
+	]
+}
