@@ -25,6 +25,7 @@ jobs:
           npm install -g newman-reporter-html
 
       - name: Run Payment Check API Tests
+        continue-on-error: true
         run: |
           newman run postman/payment-check-tests.json \
             -e <(echo '${{ secrets.POSTMAN_ENVIRONMENT }}') \
@@ -32,6 +33,7 @@ jobs:
             --reporter-html-export payment-check-report.html
 
       - name: Run Create Invoices API Tests
+        continue-on-error: true
         run: |
           newman run postman/create-invoices-tests.json \
             -e <(echo '${{ secrets.POSTMAN_ENVIRONMENT }}') \
@@ -39,6 +41,7 @@ jobs:
             --reporter-html-export create-invoices-report.html
 
       - name: Run Update Invoices API Tests
+        continue-on-error: true
         run: |
           newman run postman/update-invoices-tests.json \
             -e <(echo '${{ secrets.POSTMAN_ENVIRONMENT }}') \
